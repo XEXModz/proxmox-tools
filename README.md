@@ -13,7 +13,7 @@ apt-get install -y git && rm -rf proxmox-tools && git clone https://github.com/X
 
 ## Tools
 
-### 🔥 reinstall-firewall.sh
+### reinstall-firewall.sh
 Reinstalls and restarts the Proxmox firewall from scratch.
 Use this if your firewall is broken, missing, or misbehaving.
 
@@ -23,7 +23,7 @@ sudo ./reinstall-firewall.sh
 
 ---
 
-### 🔓 open-ports.sh
+### open-ports.sh
 Scans all services currently listening on your server and asks you one by one whether to open each port in the Proxmox firewall. Shows the service name, port, and full IP address so you know exactly what you're opening.
 
 ```bash
@@ -57,7 +57,7 @@ sudo ./open-ports.sh
 
 ---
 
-### 🚀 run.sh
+### run.sh
 Interactive menu to launch either tool.
 
 ```bash
