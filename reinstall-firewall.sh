@@ -2,6 +2,13 @@
 # Proxmox Firewall Reinstaller
 # Usage: sudo chmod +x reinstall-firewall.sh && sudo ./reinstall-firewall.sh
 
+# Root/sudo check
+if [[ $EUID -ne 0 ]]; then
+    echo "ERROR: This script must be run as root or with sudo!"
+    echo "Try: sudo ./reinstall-firewall.sh"
+    exit 1
+fi
+
 echo "Updating package list..."
 apt update
 
