@@ -53,7 +53,7 @@ Scans all services currently listening on your server and asks you one by one wh
 Interactive menu to launch either tool.
 
 ```bash
-sudo ./run.sh
+cd ~/proxmox-tools && sudo ./run.sh
 ```
 
 ```
