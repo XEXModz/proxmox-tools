@@ -15,12 +15,12 @@ Detects all services listening on your server and automatically opens those port
 
 ## One Liner Install
 
-**Reinstall Firewall:**
+**Reinstall Firewall:** Copy and paste to reinstall the firewall.
 ```bash
 curl -sSL https://raw.githubusercontent.com/XEXModz/proxmox-tools/main/reinstall-firewall.sh | sudo bash
 ```
 
-**Open Ports:**
+**Open Ports:** Copy and paste to detect and open ports.
 ```bash
 curl -sSL https://raw.githubusercontent.com/XEXModz/proxmox-tools/main/open-ports.sh | sudo bash
 ```
