@@ -4,7 +4,7 @@ while true; do
     echo "   Proxmox Helper Toolkit"
     echo "=============================="
     echo ""
-    echo "1) Reinstall Firewall  (Did you break it again? 😂)"
+    echo "1) Reinstall Firewall  (Did you break it again?)"
     echo "2) Detect + Open Ports"
     echo "0) Exit"
     echo ""
