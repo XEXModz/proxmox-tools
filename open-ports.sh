@@ -1,59 +1,63 @@
- #!/bin/bash
- # Proxmox Auto Port Opener (Interactive Mode)
+#!/bin/bash
+# Proxmox Auto Port Opener
+# Detects all listening ports and opens them in the Proxmox firewall
+# Usage: sudo chmod +x open-ports.sh && sudo ./open-ports.sh
 
-  set -euo pipefail  # Catch errors early
+# Root/sudo check
+if [[ $EUID -ne 0 ]]; then
+    echo "ERROR: This script must be run as root or with sudo!"
+    echo "Try: sudo ./open-ports.sh"
+    exit 1
+fi
 
-  if [[ $EUID -ne 0 ]]; then
-      echo "ERROR: Run as root or with sudo!"
-      exit 1
-  fi
+NODE_FW="/etc/pve/nodes/$(hostname)/host.fw"
 
-  NODE_FW="/etc/pve/nodes/$(hostname)/host.fw"
+# Get the server's actual local IP addresses
+SERVER_IPS=$(hostname -I | tr ' ' '\n' | grep -v '^$')
 
-  # Ensure [RULES] exists
-  [[ -z "$(grep -c '^\[RULES\]' "$NODE_FW")" ]] && echo "[RULES]" >> "$NODE_FW"
+# Ensure [RULES] section exists
+if ! grep -q "^\[RULES\]" "$NODE_FW"; then
+    echo "[RULES]" >> "$NODE_FW"
+fi
 
-  # Always allow SSH and Proxmox web UI
-  for port in 22 8006; do
-      ! grep -q "IN ACCEPT -p tcp -dport ${port}" "$NODE_FW" && \
-          echo "IN ACCEPT -p tcp -dport ${port}" >> "$NODE_FW"
-  done
+# Always ensure SSH and Proxmox web UI are allowed
+for port in 22 8006; do
+    if ! grep -q "IN ACCEPT -p tcp -dport $port" "$NODE_FW"; then
+        echo "IN ACCEPT -p tcp -dport $port" >> "$NODE_FW"
+    fi
+done
 
-  echo "Server IP Addresses:"
-  hostname -I | tr ' ' '\n' | grep -v '^$'
+echo ""
+echo "Server IP Addresses:"
+echo "----------------------------"
+echo "$SERVER_IPS"
+echo "----------------------------"
+echo ""
+echo "Opened Ports:"
+echo "----------------------------"
 
-  echo "Detected Ports:"
-  ss -tlnp 2>/dev/null | awk '
-      /LISTEN|STATE/ {
-          split($4, a, ":")
-          if (a[1] != "*" && a[1] != "::") next
-          port = a[length(a)]
-          service = $0
-          gsub(/LISTEN|STATE/, "", service)
-          print service " (" port ")"
-      }' | while IFS= read -r line; do
-      echo ""
-      echo "$line"
-      read -p "Allow? [y/N]: " choice
+ss -tlnp | awk '/LISTEN/ && !/127.0.0.1/' | while read -r line; do
+    full=$(echo "$line" | awk '{print $4}')
+    listen_ip=$(echo "$full" | rev | cut -d: -f2- | rev)
+    port=$(echo "$full" | rev | cut -d: -f1 | rev)
 
-      case "$choice" in
-          Y|y)
-              ! grep -q "IN ACCEPT -p tcp -dport ${port}" "$NODE_FW" && \
-                  echo "IN ACCEPT -p tcp -dport ${port}" >> "$NODE_FW" && \
-                  echo "  → Allowed"
-              ;;
-          *) echo "  → Skipped" ;;
-      esac
-  done
+    if ! grep -q "IN ACCEPT -p tcp -dport $port" "$NODE_FW"; then
+        echo "IN ACCEPT -p tcp -dport $port" >> "$NODE_FW"
+    fi
 
-  [[ -n "$(echo "$choice" | grep -iY)" ]] && \
-      echo "IN ACCEPT -p tcp -dport ${port}" >> "$NODE_FW"
+    # If listening on all interfaces, show all server IPs
+    if [[ "$listen_ip" == "0.0.0.0" || "$listen_ip" == "*" || "$listen_ip" == "::" ]]; then
+        while read -r ip; do
+            echo "  Port $port  →  $ip:$port"
+        done <<< "$SERVER_IPS"
+    else
+        echo "  Port $port  →  $listen_ip:$port"
+    fi
+done
 
-  echo ""
-  echo "Restarting firewall..."
-  if ! pve-firewall restart 2>&1; then
-      echo "ERROR: pve-firewall restart failed!"
-      exit 1
-  fi
+echo "----------------------------"
 
-  echo "Done!"
+pve-firewall restart
+
+echo ""
+echo "Done! All listening ports are now open."
