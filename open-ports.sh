@@ -3,6 +3,13 @@
 # Detects all listening ports and opens them in the Proxmox firewall
 # Usage: sudo chmod +x open-ports.sh && sudo ./open-ports.sh
 
+# Root/sudo check
+if [[ $EUID -ne 0 ]]; then
+    echo "ERROR: This script must be run as root or with sudo!"
+    echo "Try: sudo ./open-ports.sh"
+    exit 1
+fi
+
 NODE_FW="/etc/pve/nodes/$(hostname)/host.fw"
 
 # Get the server's actual local IP addresses
