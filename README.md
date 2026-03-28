@@ -1,5 +1,5 @@
 # proxmox-tools
-Simple scripts to manage your Proxmox firewall and open ports automatically.
+Simple scripts to reinstall your Proxmox firewall and open ports automatically.
 
 ---
 
