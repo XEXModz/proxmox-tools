@@ -1,26 +1,24 @@
 #!/bin/bash
-# Proxmox Auto Port Opener
-# Detects all listening ports and opens them in the Proxmox firewall
-# Usage: sudo chmod +x open-ports.sh && sudo ./open-ports.sh
+# Proxmox Auto Port Opener with basic safety
 
-# Root/sudo check
 if [[ $EUID -ne 0 ]]; then
     echo "ERROR: This script must be run as root or with sudo!"
-    echo "Try: sudo ./open-ports.sh"
     exit 1
 fi
 
 NODE_FW="/etc/pve/nodes/$(hostname)/host.fw"
 
-# Get the server's actual local IP addresses
+if [[ ! -f "$NODE_FW" ]]; then
+    echo "ERROR: host.fw not found at $NODE_FW"
+    exit 1
+fi
+
 SERVER_IPS=$(hostname -I | tr ' ' '\n' | grep -v '^$')
 
-# Ensure [RULES] section exists
 if ! grep -q "^\[RULES\]" "$NODE_FW"; then
     echo "[RULES]" >> "$NODE_FW"
 fi
 
-# Always ensure SSH and Proxmox web UI are allowed
 for port in 22 8006; do
     if ! grep -q "IN ACCEPT -p tcp -dport $port" "$NODE_FW"; then
         echo "IN ACCEPT -p tcp -dport $port" >> "$NODE_FW"
@@ -45,7 +43,6 @@ ss -tlnp | awk '/LISTEN/ && !/127.0.0.1/' | while read -r line; do
         echo "IN ACCEPT -p tcp -dport $port" >> "$NODE_FW"
     fi
 
-    # If listening on all interfaces, show all server IPs
     if [[ "$listen_ip" == "0.0.0.0" || "$listen_ip" == "*" || "$listen_ip" == "::" ]]; then
         while read -r ip; do
             echo "  Port $port  →  $ip:$port"
@@ -55,9 +52,10 @@ ss -tlnp | awk '/LISTEN/ && !/127.0.0.1/' | while read -r line; do
     fi
 done
 
-echo "----------------------------"
-
-pve-firewall restart
+if ! pve-firewall restart; then
+    echo "ERROR: Failed to restart pve-firewall!"
+    exit 1
+fi
 
 echo ""
 echo "Done! All listening ports are now open."
