@@ -13,7 +13,7 @@ Detects all services listening on your server and automatically opens those port
 
 ---
 
-## One Liner Install
+## One Liner Install (Recommended)
 
 **Reinstall Firewall:** Copy and paste to reinstall the firewall.
 ```bash
