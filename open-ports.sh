@@ -1,7 +1,6 @@
 #!/bin/bash
-# Proxmox Auto Port Opener
-# Detects all listening ports and opens them in the Proxmox firewall
-# Usage: sudo chmod +x open-ports.sh && sudo ./open-ports.sh
+# Proxmox Auto Port Opener (Interactive Mode)
+# Detects all listening ports and asks before opening them
 
 # Root/sudo check
 if [[ $EUID -ne 0 ]]; then
@@ -33,26 +32,45 @@ echo "----------------------------"
 echo "$SERVER_IPS"
 echo "----------------------------"
 echo ""
-echo "Opened Ports:"
+echo "Detected Ports (Interactive Mode):"
 echo "----------------------------"
+echo "Tip: If you don't recognize the service, type 'n' to stay safe."
+echo ""
 
 ss -tlnp | awk '/LISTEN/ && !/127.0.0.1/' | while read -r line; do
     full=$(echo "$line" | awk '{print $4}')
     listen_ip=$(echo "$full" | rev | cut -d: -f2- | rev)
     port=$(echo "$full" | rev | cut -d: -f1 | rev)
 
-    if ! grep -q "IN ACCEPT -p tcp -dport $port" "$NODE_FW"; then
-        echo "IN ACCEPT -p tcp -dport $port" >> "$NODE_FW"
+    # Extract service name (process)
+    service=$(echo "$line" | awk -F'"' '{print $2}')
+    [[ -z "$service" ]] && service="unknown"
+
+    echo ""
+    echo "Detected service: $service (port $port)"
+
+    read -p "Allow this port? [y/N]: " choice
+
+    if [[ "$choice" =~ ^[Yy]$ ]]; then
+        if ! grep -q "IN ACCEPT -p tcp -dport $port" "$NODE_FW"; then
+            echo "IN ACCEPT -p tcp -dport $port" >> "$NODE_FW"
+            echo "  → Allowed"
+        else
+            echo "  → Already allowed"
+        fi
+
+        # Display mapping
+        if [[ "$listen_ip" == "0.0.0.0" || "$listen_ip" == "*" || "$listen_ip" == "::" ]]; then
+            while read -r ip; do
+                echo "  Port $port  →  $ip:$port"
+            done <<< "$SERVER_IPS"
+        else
+            echo "  Port $port  →  $listen_ip:$port"
+        fi
+    else
+        echo "  → Skipped"
     fi
 
-    # If listening on all interfaces, show all server IPs
-    if [[ "$listen_ip" == "0.0.0.0" || "$listen_ip" == "*" || "$listen_ip" == "::" ]]; then
-        while read -r ip; do
-            echo "  Port $port  →  $ip:$port"
-        done <<< "$SERVER_IPS"
-    else
-        echo "  Port $port  →  $listen_ip:$port"
-    fi
 done
 
 echo "----------------------------"
@@ -60,4 +78,4 @@ echo "----------------------------"
 pve-firewall restart
 
 echo ""
-echo "Done! All listening ports are now open."
+echo "Done! Selected ports are now open."
