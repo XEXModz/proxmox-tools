@@ -1,0 +1,40 @@
+PROXMOX TOOLS - HOW TO USE
+==========================
+
+SETUP - Clone the repo
+------------------------
+git clone https://github.com/XEXModz/proxmox-tools
+cd proxmox-tools
+sudo chmod +x reinstall-firewall.sh
+sudo chmod +x open-ports.sh
+
+
+TOOL 1 - Reinstall your Proxmox firewall
+-----------------------------------------
+Use this if your Proxmox firewall is broken or missing.
+
+sudo ./reinstall-firewall.sh
+
+This will:
+ - Update your package list
+ - Reinstall pve-firewall
+ - Enable and start the firewall
+
+
+TOOL 2 - Auto open your listening ports
+-----------------------------------------
+Use this any time you want to open ports for services running on your server.
+
+sudo ./open-ports.sh
+
+This will:
+ - Detect all services listening on your server
+ - Automatically open those ports in the Proxmox firewall
+ - Show you every open port and the full IP address it is available on
+ - Restart the firewall to apply changes
+
+NOTES:
+------
+ - You must run both scripts as root (sudo)
+ - Port 22 (SSH) and 8006 (Proxmox Web UI) are always kept open automatically
+ - Run open-ports.sh again any time you install a new service
