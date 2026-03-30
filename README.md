@@ -6,22 +6,29 @@ Simple scripts to manage your Proxmox firewall and open ports automatically.
 ## One Liner Install
 Installs git if needed, removes any old proxmox-tools folder, clones fresh, and launches the menu:
 ```bash
-apt-get install -y git && if [ -d "proxmox-tools" ]; then cd proxmox-tools && git pull; else git clone https://github.com/XEXModz/proxmox-tools.git && cd proxmox-tools; fi && chmod +x *.sh && sudo ./run.sh
+apt-get install -y git && rm -rf proxmox-tools && git clone https://github.com/XEXModz/proxmox-tools.git && cd proxmox-tools && chmod +x *.sh && sudo ./run.sh
 ```
 
 ---
 
 ## Tools
 
-### reinstall-firewall.sh
+### 🔥 reinstall-firewall.sh
 Reinstalls and restarts the Proxmox firewall from scratch.
 Use this if your firewall is broken, missing, or misbehaving.
 
+```bash
+sudo ./reinstall-firewall.sh
+```
 
 ---
 
-### open-ports.sh
+### 🔓 open-ports.sh
 Scans all services currently listening on your server and asks you one by one whether to open each port in the Proxmox firewall. Shows the service name, port, and full IP address so you know exactly what you're opening.
+
+```bash
+sudo ./open-ports.sh
+```
 
 **Example:**
 ```
@@ -52,6 +59,10 @@ Scans all services currently listening on your server and asks you one by one wh
 
 ### 🚀 run.sh
 Interactive menu to launch either tool.
+
+```bash
+sudo ./run.sh
+```
 
 ```
 ==============================

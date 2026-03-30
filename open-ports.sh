@@ -146,7 +146,7 @@ while IFS= read -r line; do
         echo "  ⚠ This port is flagged as risky. Only open it if you are 100% sure you need it."
         echo "  🚫 NEVER port forward this port on your router — doing so exposes it to the entire internet."
         echo ""
-        read -rp "  Type exactly  y --confirm  to open this risky port, or n to skip: " answer
+        read -rp "  Type exactly  y --confirm  to open this risky port, or n to skip: " answer < /dev/tty
         echo ""
         if [[ "$answer" == "y --confirm" ]]; then
             if ! grep -q "IN ACCEPT -p tcp -dport $port" "$NODE_FW"; then
@@ -159,7 +159,7 @@ while IFS= read -r line; do
         fi
     else
         echo "  If you don't recognize this service, type n to reject it."
-        read -rp "  Open this port? (y/n): " answer
+        read -rp "  Open this port? (y/n): " answer < /dev/tty
         echo ""
         if [[ "$answer" =~ ^[Yy]$ ]]; then
             if ! grep -q "IN ACCEPT -p tcp -dport $port" "$NODE_FW"; then
