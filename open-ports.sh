@@ -24,13 +24,14 @@ fi
 
 NODE_FW="/etc/pve/nodes/$(hostname)/host.fw"
 
-# Check firewall config exists
+# Auto create firewall config if it doesn't exist
 if [[ ! -f "$NODE_FW" ]]; then
     echo ""
-    echo "  ERROR: Proxmox firewall config not found at $NODE_FW"
-    echo "  Run reinstall-firewall.sh first!"
+    echo "  Firewall config not found, creating it..."
+    mkdir -p "$(dirname "$NODE_FW")"
+    touch "$NODE_FW"
+    echo "  Created $NODE_FW"
     echo ""
-    exit 1
 fi
 
 # Get the server's local IP addresses
